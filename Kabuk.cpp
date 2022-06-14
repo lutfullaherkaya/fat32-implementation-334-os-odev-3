@@ -76,7 +76,12 @@ void Kabuk::touch(std::vector<string> &arglar) {
 }
 
 void Kabuk::mv(std::vector<string> &arglar) {
-
+    /**
+     * todo: kolay yolu:
+     * 1 - traversal yapıp babasını bul, babasının çocuğu olan entry'i silik olarak işaretle. bu entry en üst klasör zaten
+     * Çocuk entryi kopyala.
+     * eklenecek yere çocuk olarak ekle. zaten en üst klasör olduğu için başka bir şey yapmana gerek yok.
+     */
 }
 
 void Kabuk::cat(std::vector<string> &arglar) {
