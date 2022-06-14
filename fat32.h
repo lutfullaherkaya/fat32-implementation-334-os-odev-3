@@ -62,6 +62,36 @@ struct FatFile83 {
     uint32_t fileSize;             // Filesize in bytes
 
     uint32_t clusterID() const { return (eaIndex << 16) | firstCluster; }
+
+    static bool clusterVar(uint32_t clusterID) {
+        if (clusterID >= 0x0FFFFFF8) {
+            // cluster kalmadi
+            return false;
+        } else if (clusterID == 0x0FFFFFF7) {
+            // bad sector
+            return false;
+        } else {
+            //
+            return true;
+        }
+    }
+
+    static string tarihSaatYaziyaDonustur(uint16_t tarih, uint16_t zaman) {
+        string sonuc;
+        string aylar[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+        sonuc += aylar[(tarih >> 5) & 0b1111] + " " + to_string(tarih & 0b11111) + " ";
+        sonuc += saatBasina0Koy(to_string((zaman >> 11) & 0b11111)) + ":" +
+                 saatBasina0Koy(to_string((zaman >> 5) & 0b111111));
+        return sonuc;
+    }
+
+    static string saatBasina0Koy(string saat) {
+        if (saat.size() == 1) {
+            return "0" + saat;
+        } else {
+            return saat;
+        }
+    }
 };
 
 // The long filename information can be repeated as necessary before the original 8.3 filename entry
@@ -75,29 +105,29 @@ struct FatFileLFN {
     uint16_t firstCluster;  // Always 0x0000
     uint16_t name3[2];      // 2 More chars of name (UTF-16 format)
 
-    static vector<uint16_t> birlesikLFN(vector<FatFileLFN>& ayrikLFNler) {
+    static vector<uint16_t> birlesikLFN(vector<FatFileLFN> &ayrikLFNler) {
         vector<uint16_t> sonuc;
-        for (auto lfn : ayrikLFNler) {
-            for (uint16_t & utf16char : lfn.name1) {
+        for (auto lfn: ayrikLFNler) {
+            for (uint16_t &utf16char: lfn.name1) {
                 sonuc.push_back(utf16char);
             }
-            for (uint16_t & utf16char : lfn.name2) {
+            for (uint16_t &utf16char: lfn.name2) {
                 sonuc.push_back(utf16char);
             }
-            for (uint16_t & utf16char : lfn.name3) {
+            for (uint16_t &utf16char: lfn.name3) {
                 sonuc.push_back(utf16char);
             }
         }
         return sonuc;
     }
 
-    static string utf16DenAsciiYe(vector<uint16_t>& utf16string) {
+    static string utf16DenAsciiYe(vector<uint16_t> &utf16string) {
         string sonuc;
-        for (uint16_t & utf16char : utf16string) {
+        for (uint16_t &utf16char: utf16string) {
             if (utf16char == 0) {
                 break;
             }
-            sonuc.push_back(((char*)(&utf16char))[0]);
+            sonuc.push_back(((char *) (&utf16char))[0]);
         }
         return sonuc;
     }
@@ -106,7 +136,13 @@ struct FatFileLFN {
 union FatFileEntry {
     FatFile83 msdos;
     FatFileLFN lfn;
+
+    bool longFileNamedir() {
+        uint8_t bayt11 = ((uint8_t *) this)[11];
+        return bayt11 == 0x0F;
+    }
 };
+
 #pragma pack(pop)
 
 

@@ -1,6 +1,6 @@
-OBJS	= main.o SISKO32.o Kabuk.o
-SOURCE	= main.cpp SISKO32.cpp Kabuk.cpp
-HEADER	= main.h fat32.h SISKO32.h Kabuk.h
+OBJS	= main.o SISKO32.o Kabuk.o Bilimum.o
+SOURCE	= main.cpp SISKO32.cpp Kabuk.cpp Bilimum.cpp
+HEADER	= main.h fat32.h SISKO32.h Kabuk.h Bilimum.h
 OUT	= hw3
 CC	 = g++
 FLAGS	 = -g -c -Wall
@@ -17,6 +17,9 @@ SISKO32.o: SISKO32.cpp
 
 Kabuk.o: Kabuk.cpp
 	$(CC) $(FLAGS) Kabuk.cpp -std=c11
+
+Bilimum.o: Bilimum.cpp
+	$(CC) $(FLAGS) Bilimum.cpp -std=c11
 
 
 clean:

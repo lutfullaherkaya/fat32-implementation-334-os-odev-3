@@ -13,6 +13,7 @@ using namespace std;
 #include <utility>
 #include <vector>
 #include "fat32.h"
+#include "Bilimum.h"
 
 class Dizin;
 
@@ -32,15 +33,24 @@ public:
     uint32_t rootClusterID;
 
     long clusterBaytAdresi(uint32_t clusterID);
+
+    int clusterAzamiEntrySayisi;
 };
 
 class Dizin {
 public:
-    Dizin(SISKO32 &sisko32);
+    Dizin(SISKO32 *sisko32);
 
     void ustDizineCik();
 
-    string dizinAdi();
+    static string dizinAdi(pair<vector<FatFileLFN>, FatFile83> &dizinAdCifti);
+
+    static string uzunDizinAdi(pair<vector<FatFileLFN>, FatFile83> &dizinAdCifti);
+
+    static string kisaDizinAdi(pair<vector<FatFileLFN>, FatFile83> &dizinAdCifti);
+
+    static string filenamedenStrye(uint8_t *fname, int len);
+
 
     pair<vector<FatFileLFN>, FatFile83> dizinOku();
 
@@ -50,12 +60,26 @@ public:
 
     void kokeCik();
 
-    SISKO32 &sisko32;
+    SISKO32 *sisko32;
     pair<vector<FatFileLFN>, FatFile83> dizin;
     vector<string> dizinKelimeleri;
     uint32_t dizinClusterID;
 
     void dizinAtla();
+
+    void git(string &yol);
+
+    void ls(bool ayrintili);
+
+    unsigned int sonrakiClusterID(uint32_t id);
+
+    static bool dizinBosVeSonrasiYok(pair<vector<FatFileLFN>, FatFile83> dizin1);
+
+    static bool dizinSilinmis(pair<vector<FatFileLFN>, FatFile83> dizin1);
+
+    static bool klasordur(const pair<vector<FatFileLFN>, FatFile83>& dizin1);
+
+    static bool noktaDizinidir(pair<vector<FatFileLFN>, FatFile83> dizin1);
 };
 
 #endif //INC_334_OS_ODEV_3_SISKO32_H
