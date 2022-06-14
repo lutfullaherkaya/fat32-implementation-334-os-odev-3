@@ -10,13 +10,13 @@ all: $(OBJS)
 	$(CC) -g $(OBJS) -o $(OUT) $(LFLAGS)
 
 main.o: main.cpp
-	$(CC) $(FLAGS) main.cpp
+	$(CC) $(FLAGS) main.cpp -std=c11
 
 SISKO32.o: SISKO32.cpp
-	$(CC) $(FLAGS) SISKO32.cpp
+	$(CC) $(FLAGS) SISKO32.cpp -std=c11
 
 Kabuk.o: Kabuk.cpp
-	$(CC) $(FLAGS) Kabuk.cpp
+	$(CC) $(FLAGS) Kabuk.cpp -std=c11
 
 
 clean:

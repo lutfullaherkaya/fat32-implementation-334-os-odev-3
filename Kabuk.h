@@ -11,11 +11,17 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include "SISKO32.h"
+
 using namespace std;
+
+vector<string> ayir(string &yazi, char ayrac);
 
 class Kabuk {
 
 public:
+    explicit Kabuk(SISKO32 *sisko32Ptr);
+
     void cd(std::vector<string> &arglar);
 
     void ls(std::vector<string> &arglar);
@@ -27,6 +33,11 @@ public:
     void mv(std::vector<string> &arglar);
 
     void cat(std::vector<string> &arglar);
+
+    void promptYaz();
+
+    SISKO32 &sisko32;
+    Dizin suAnkiDizin;
 };
 
 

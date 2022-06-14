@@ -14,7 +14,7 @@
 #include <string>
 using namespace std;
 
-int main();
+int main(int argc, char** argv);
 vector<string> ayir(string &yazi, char ayrac);
 
 #endif //INC_334_OS_ODEV_3_MAIN_H

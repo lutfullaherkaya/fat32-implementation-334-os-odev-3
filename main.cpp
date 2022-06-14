@@ -6,11 +6,11 @@
 
 using namespace std;
 
-int main() {
-    SISKO32 sisko;
-    Kabuk kabuk;
+int main(int argc, char** argv) {
+    SISKO32 sisko(argv[1]);
+    Kabuk kabuk(&sisko);
     vector<string> komutKelimeleri;
-
+    kabuk.promptYaz();
     do {
         string komut;
         getline(cin, komut);
@@ -37,13 +37,5 @@ int main() {
     return 0;
 }
 
-vector<string> ayir(string &yazi, char ayrac) {
-    vector<string> sonuc;
-    string kelime;
-    stringstream ss(yazi);
-    while (getline(ss, kelime, ayrac)) {
-        sonuc.push_back(kelime);
-    }
-    return sonuc;
-}
+
 
