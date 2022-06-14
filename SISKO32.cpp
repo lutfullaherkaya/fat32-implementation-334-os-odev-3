@@ -27,6 +27,11 @@ long SISKO32::clusterBaytAdresi(uint32_t clusterID) {
     return clusterSectorAdresi(clusterID) * fat_boot.BytesPerSector;
 }
 
+// todo:
+bool SISKO32::dizinEntrileriEkle(vector<FatFileEntry> &entriler) {
+    return false;
+}
+
 Dizin::Dizin(SISKO32 *sisko32) : sisko32(sisko32) {
     kokeCik();
 }
@@ -148,9 +153,13 @@ string Dizin::kisaDizinAdi(pair<vector<FatFileLFN>, FatFile83> &dizinAdCifti) {
     return sonuc;
 }
 
-void Dizin::git(string &yol) {
-    Dizin orijinalDizin = *this;
+bool Dizin::git(string &yol) {
     auto gidilecekDizinKelimeleri = ayir(yol, '/');
+    return git(gidilecekDizinKelimeleri);
+}
+
+bool Dizin::git(vector<string> &gidilecekDizinKelimeleri) {
+    Dizin orijinalDizin = *this;
     if (gidilecekDizinKelimeleri[0] == "") { // mesela /drives/etc
         kokeCik();
     }
@@ -158,7 +167,7 @@ void Dizin::git(string &yol) {
         if (kelime == "..") {
             if (kokDizindir()) {
                 *this = orijinalDizin;
-                break;
+                return false;
             } else {
                 ustDizineCik();
             }
@@ -169,11 +178,13 @@ void Dizin::git(string &yol) {
         } else {
             if (!in(kelime)) {
                 *this = orijinalDizin;
-                break;
+                return false;
             }
         }
     }
+    return true;
 }
+
 
 void Dizin::ls(bool ayrintili) {
     vector<FatFileLFN> longFileNamesBuffer;
@@ -234,15 +245,12 @@ unsigned int Dizin::sonrakiClusterID(uint32_t id) {
     unsigned int fat_sector = first_fat_sector + (fat_offset / sisko32->fat_boot.BytesPerSector);
     unsigned int ent_offset = fat_offset % sisko32->fat_boot.BytesPerSector;
 
-    //at this point you need to read from sector "fat_sector" on the disk into "FAT_table".
     fseek(sisko32->imajFP, fat_sector * sisko32->fat_boot.BytesPerSector, SEEK_SET);
     fread(&FAT_table, sizeof(FAT_table), 1, sisko32->imajFP);
 
-    //remember to ignore the high 4 bits.
     unsigned int table_value = *(unsigned int *) &FAT_table[ent_offset];
     table_value &= 0x0FFFFFFF;
     return table_value;
-    //the variable "table_value" now has the information you need about the next cluster in the chain.
 
 }
 
@@ -261,7 +269,39 @@ bool Dizin::klasordur(const pair<vector<FatFileLFN>, FatFile83> &dizin1) {
 }
 
 bool Dizin::noktaDizinidir(pair<vector<FatFileLFN>, FatFile83> dizin1) {
-    return ((uint8_t*)(&dizin1.second))[0] == 0x2E;
+    return ((uint8_t *) (&dizin1.second))[0] == 0x2E;
 }
 
+bool Dizin::mkdir(const string &dizinAdi) {
+    vector<FatFileEntry> entriler = dizinEntrileriOlustur(dizinAdi, true);
+    sisko32->dizinEntrileriEkle(entriler);
+    return true;
+}
 
+bool Dizin::touch(const string &dosyaAdi) {
+    vector<FatFileEntry> entriler = dizinEntrileriOlustur(dosyaAdi, false);
+    sisko32->dizinEntrileriEkle(entriler);
+    return true;
+}
+
+// todo:
+vector<FatFileEntry> Dizin::dizinEntrileriOlustur(const string &dizinAdi, bool klasordur) {
+    return vector<FatFileEntry>();
+}
+
+void Dizin::cat() {
+    for (auto suankiCid = dizinClusterID;
+         FatFile83::clusterVar(suankiCid);
+         suankiCid = sonrakiClusterID(suankiCid)) {
+
+        auto *sektor = new uint8_t[sisko32->fat_boot.BytesPerSector];
+        fseek(sisko32->imajFP, sisko32->clusterBaytAdresi(suankiCid), SEEK_SET);
+        for (int i = 0; i < sisko32->fat_boot.SectorsPerCluster; ++i) {
+            fread(sektor, sizeof(uint8_t) * sisko32->fat_boot.BytesPerSector, 1, sisko32->imajFP);
+            if (sektor[0] != '\0') {
+                printf("%s", sektor);
+            }
+        }
+        delete[] sektor;
+    }
+}

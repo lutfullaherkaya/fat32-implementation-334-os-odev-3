@@ -9,6 +9,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <algorithm>
 using namespace std;
 vector<string> ayir(string &yazi, char ayrac);
 

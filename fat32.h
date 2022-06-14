@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <vector>
 #include <string>
+#include "Bilimum.h"
 
 using namespace std;
 // Bytes per sector is fixed at 512 in this homework.
@@ -107,7 +108,8 @@ struct FatFileLFN {
 
     static vector<uint16_t> birlesikLFN(vector<FatFileLFN> &ayrikLFNler) {
         vector<uint16_t> sonuc;
-        for (auto lfn: ayrikLFNler) {
+        for (long i = ayrikLFNler.size()-1; i >= 0; --i) {
+            auto &lfn = ayrikLFNler[i];
             for (uint16_t &utf16char: lfn.name1) {
                 sonuc.push_back(utf16char);
             }

@@ -35,6 +35,8 @@ public:
     long clusterBaytAdresi(uint32_t clusterID);
 
     int clusterAzamiEntrySayisi;
+
+    bool dizinEntrileriEkle(vector<FatFileEntry> &entriler);
 };
 
 class Dizin {
@@ -67,7 +69,8 @@ public:
 
     void dizinAtla();
 
-    void git(string &yol);
+    bool git(string &yol);
+    bool git(vector<string> &gidilecekDizinKelimeleri);
 
     void ls(bool ayrintili);
 
@@ -80,6 +83,14 @@ public:
     static bool klasordur(const pair<vector<FatFileLFN>, FatFile83>& dizin1);
 
     static bool noktaDizinidir(pair<vector<FatFileLFN>, FatFile83> dizin1);
+
+    bool mkdir(const string& dizinAdi);
+
+    bool touch(const string& dosyaAdi);
+
+    vector<FatFileEntry> dizinEntrileriOlustur(const string &dizinAdi, bool klasordur);
+
+    void cat();
 };
 
 #endif //INC_334_OS_ODEV_3_SISKO32_H

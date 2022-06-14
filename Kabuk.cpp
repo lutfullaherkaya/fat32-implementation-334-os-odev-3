@@ -46,11 +46,33 @@ void Kabuk::ls(std::vector<string> &arglar) {
 }
 
 void Kabuk::mkdir(std::vector<string> &arglar) {
+    auto listelemeDizini = Dizin(&sisko32);
 
+    vector<string> gidilecekDizinKelimeleri = ayir(arglar[1], '/');
+
+    string dizinAdi = gidilecekDizinKelimeleri.back();
+    gidilecekDizinKelimeleri.pop_back();
+
+    if (listelemeDizini.git(gidilecekDizinKelimeleri)) {
+        listelemeDizini.mkdir(dizinAdi);
+    }
+
+    promptYaz();
 }
 
 void Kabuk::touch(std::vector<string> &arglar) {
+    auto listelemeDizini = Dizin(&sisko32);
 
+    vector<string> gidilecekDizinKelimeleri = ayir(arglar[1], '/');
+
+    string dosyaAdi = gidilecekDizinKelimeleri.back();
+    gidilecekDizinKelimeleri.pop_back();
+
+    if(listelemeDizini.git(gidilecekDizinKelimeleri)) {
+        listelemeDizini.touch(dosyaAdi);
+    }
+
+    promptYaz();
 }
 
 void Kabuk::mv(std::vector<string> &arglar) {
@@ -58,7 +80,11 @@ void Kabuk::mv(std::vector<string> &arglar) {
 }
 
 void Kabuk::cat(std::vector<string> &arglar) {
-
+    auto okunacakDizin = Dizin(&sisko32);
+    if (okunacakDizin.git(arglar[1])) {
+        okunacakDizin.cat();
+    }
+    promptYaz();
 }
 
 
