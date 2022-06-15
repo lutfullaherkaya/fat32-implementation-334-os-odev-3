@@ -5,8 +5,17 @@
 #include <vector>
 #include <string>
 #include "Bilimum.h"
+#include <chrono>
+#include <sys/time.h>
+#include <ctime>
 
 using namespace std;
+using std::cout;
+using std::endl;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using std::chrono::seconds;
+using std::chrono::system_clock;
 // Bytes per sector is fixed at 512 in this homework.
 #define BPS 512
 
@@ -93,6 +102,47 @@ struct FatFile83 {
             return saat;
         }
     }
+
+    void setAllDateTimesToNow() {
+        // current date/time based on current system
+        time_t simdi = time(0);
+        tm *ltm = localtime(&simdi);
+
+        auto millisec_since_epoch = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        creationTimeMs = (millisec_since_epoch / 10) % 200;
+
+        uint16_t zaman = simdikiZaman();
+        creationTime = zaman;
+        modifiedTime = zaman;
+        uint16_t tarih = simdikiTarih();
+        creationDate = tarih;
+        lastAccessTime = tarih;
+        modifiedDate = tarih;
+    }
+
+    static uint16_t simdikiZaman() {
+        // current date/time based on current system
+        time_t simdi = time(0);
+        tm *ltm = localtime(&simdi);
+
+        uint16_t zaman = 0;
+        zaman |= (ltm->tm_sec / 2 % 30);
+        zaman |= ((ltm->tm_min % 60) << 5);
+        zaman |= ((ltm->tm_hour % 24) << 11);
+        return zaman;
+    }
+
+    static uint16_t simdikiTarih() {
+        // current date/time based on current system
+        time_t simdi = time(0);
+        tm *ltm = localtime(&simdi);
+        uint16_t tarih = 0;
+        tarih |= (ltm->tm_mday);
+        tarih |= ((ltm->tm_mon) << 5);
+        tarih |= ((ltm->tm_year) << 9);
+        return tarih;
+
+    }
 };
 
 // The long filename information can be repeated as necessary before the original 8.3 filename entry
@@ -106,9 +156,49 @@ struct FatFileLFN {
     uint16_t firstCluster;  // Always 0x0000
     uint16_t name3[2];      // 2 More chars of name (UTF-16 format)
 
+    unsigned char lfn_checksum(const unsigned char *pFCBName) {
+        int i;
+        unsigned char sum = 0;
+
+        for (i = 11; i; i--)
+            sum = ((sum & 1) << 7) + (sum >> 1) + *pFCBName++;
+
+        return sum;
+    }
+
+    void setName(string name) {
+        for (int i = 0; i < 5; ++i) {
+            if (i < name.size()) {
+                name1[i] = name[i];
+            } else if (i == name.size()) {
+                name1[i] = 0;
+            } else {
+                name1[i] = 0xFFFF;
+            }
+        }
+        for (int i = 0; i < 6; ++i) {
+            if ((i + 5) < name.size()) {
+                name2[i] = name[i + 5];
+            } else if ((i + 5) == name.size()) {
+                name2[i] = 0;
+            } else {
+                name2[i] = 0xFFFF;
+            }
+        }
+        for (int i = 0; i < 2; ++i) {
+            if ((i + 11) < name.size()) {
+                name3[i] = name[i + 11];
+            } else if ((i + 11) == name.size()) {
+                name3[i] = 0;
+            } else {
+                name3[i] = 0xFFFF;
+            }
+        }
+    }
+
     static vector<uint16_t> birlesikLFN(vector<FatFileLFN> &ayrikLFNler) {
         vector<uint16_t> sonuc;
-        for (long i = ayrikLFNler.size()-1; i >= 0; --i) {
+        for (long i = ayrikLFNler.size() - 1; i >= 0; --i) {
             auto &lfn = ayrikLFNler[i];
             for (uint16_t &utf16char: lfn.name1) {
                 sonuc.push_back(utf16char);

@@ -2,7 +2,9 @@
 // Created by lutfullah on 13.06.2022.
 //
 
+#include <cstring>
 #include "SISKO32.h"
+#include "Bilimum.h"
 
 SISKO32::SISKO32(char *imajDosyasi) : imajDosyasi(imajDosyasi) {
     imajFP = fopen(imajDosyasi, "r+");
@@ -113,7 +115,6 @@ void Dizin::dizinAtla() {
 }
 
 string Dizin::dizinAdi(pair<vector<FatFileLFN>, FatFile83> &dizinAdCifti) {
-    // todo: uzun isimler denenecek. bir de kisa isimle uzun isim ayni mi?
     string uzun = uzunDizinAdi(dizinAdCifti);
     string kisa = kisaDizinAdi(dizinAdCifti);
     if (uzun == "") {
@@ -272,21 +273,62 @@ bool Dizin::noktaDizinidir(pair<vector<FatFileLFN>, FatFile83> dizin1) {
     return ((uint8_t *) (&dizin1.second))[0] == 0x2E;
 }
 
-bool Dizin::mkdir(const string &dizinAdi) {
+bool Dizin::mkdir(string &dizinAdi) {
     vector<FatFileEntry> entriler = dizinEntrileriOlustur(dizinAdi, true);
     sisko32->dizinEntrileriEkle(entriler);
     return true;
 }
 
-bool Dizin::touch(const string &dosyaAdi) {
+bool Dizin::touch(string &dosyaAdi) {
     vector<FatFileEntry> entriler = dizinEntrileriOlustur(dosyaAdi, false);
     sisko32->dizinEntrileriEkle(entriler);
     return true;
 }
 
-// todo:
-vector<FatFileEntry> Dizin::dizinEntrileriOlustur(const string &dizinAdi, bool klasordur) {
-    return vector<FatFileEntry>();
+vector<FatFileEntry> Dizin::dizinEntrileriOlustur(string &dizinAdi, bool klasordur) {
+    vector<FatFileEntry> dizinEntrileri;
+
+    FatFileEntry dosya;
+    memset(&dosya.msdos, 0, sizeof(dosya));
+    memset(&dosya.msdos.filename, ' ', 11);
+    string uzanti = getUzanti(dizinAdi);
+    auto dizinAdiBoyutu = dizinAdi.size();
+    if (!uzanti.empty()) {
+        strncpy((char *) (dosya.msdos.extension), uzanti.c_str(), uzanti.size());
+        dizinAdiBoyutu -= uzanti.size() + 1;
+    }
+    if (dizinAdiBoyutu > 8) {
+        strncpy((char *) (dosya.msdos.filename), dizinAdi.c_str(), 6);
+        dosya.msdos.filename[6] = '~';
+        dosya.msdos.filename[7] = '1'; // todo: burasi kopya dosyalarda 1 den fazla olmalidir. lazim mi?
+    } else {
+        strncpy((char *) (dosya.msdos.filename), dizinAdi.c_str(), dizinAdiBoyutu);
+    }
+    buyukHarfYap((char *) dosya.msdos.filename, 11);
+    if (klasordur) {
+        dosya.msdos.attributes = 0x10;
+    } else {
+        dosya.msdos.attributes = 0x20;
+    }
+    dosya.msdos.setAllDateTimesToNow();
+
+
+    for (int i = 0; i < dizinAdi.size(); i += 13) {
+        FatFileEntry lfn;
+        lfn.lfn.setName(dizinAdi.substr(i, 13));
+        lfn.lfn.sequence_number = i+1;
+        lfn.lfn.attributes = 0x0f;
+        lfn.lfn.reserved = 0x00;
+        lfn.lfn.firstCluster = 0x0000;
+        lfn.lfn.checksum = lfn.lfn.lfn_checksum(dosya.msdos.filename);
+        dizinEntrileri.push_back(lfn);
+    }
+    reverse(dizinEntrileri.begin(), dizinEntrileri.end());
+    // the entry representing the end of the filename comes first. The sequence number of this entry has bit 6 (0x40) set to represent that it is the last logical LFN entry
+    dizinEntrileri[0].lfn.sequence_number |= 0x40;
+    dizinEntrileri.push_back(dosya);
+
+    return dizinEntrileri;
 }
 
 void Dizin::cat() {

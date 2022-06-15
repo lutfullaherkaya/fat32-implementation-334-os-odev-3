@@ -84,11 +84,11 @@ public:
 
     static bool noktaDizinidir(pair<vector<FatFileLFN>, FatFile83> dizin1);
 
-    bool mkdir(const string& dizinAdi);
+    bool mkdir(string& dizinAdi);
 
-    bool touch(const string& dosyaAdi);
+    bool touch(string& dosyaAdi);
 
-    vector<FatFileEntry> dizinEntrileriOlustur(const string &dizinAdi, bool klasordur);
+    vector<FatFileEntry> dizinEntrileriOlustur(string &dizinAdi, bool klasordur);
 
     void cat();
 };

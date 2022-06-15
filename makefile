@@ -10,16 +10,16 @@ all: $(OBJS)
 	$(CC) -g $(OBJS) -o $(OUT) $(LFLAGS)
 
 main.o: main.cpp
-	$(CC) $(FLAGS) main.cpp -std=c11
+	$(CC) $(FLAGS) main.cpp -std=c++11
 
 SISKO32.o: SISKO32.cpp
-	$(CC) $(FLAGS) SISKO32.cpp -std=c11
+	$(CC) $(FLAGS) SISKO32.cpp -std=c++11
 
 Kabuk.o: Kabuk.cpp
-	$(CC) $(FLAGS) Kabuk.cpp -std=c11
+	$(CC) $(FLAGS) Kabuk.cpp -std=c++11
 
 Bilimum.o: Bilimum.cpp
-	$(CC) $(FLAGS) Bilimum.cpp -std=c11
+	$(CC) $(FLAGS) Bilimum.cpp -std=c++11
 
 
 clean:

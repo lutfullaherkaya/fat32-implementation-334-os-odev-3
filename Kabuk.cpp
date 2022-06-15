@@ -54,6 +54,10 @@ void Kabuk::mkdir(std::vector<string> &arglar) {
     gidilecekDizinKelimeleri.pop_back();
 
     if (listelemeDizini.git(gidilecekDizinKelimeleri)) {
+        if (listelemeDizini.git(dizinAdi)) { // klasor zaten varmis.
+            promptYaz();
+            return;
+        }
         listelemeDizini.mkdir(dizinAdi);
     }
 
@@ -69,6 +73,10 @@ void Kabuk::touch(std::vector<string> &arglar) {
     gidilecekDizinKelimeleri.pop_back();
 
     if(listelemeDizini.git(gidilecekDizinKelimeleri)) {
+        if (listelemeDizini.git(dosyaAdi)) { // dosya zaten varmis.
+            promptYaz();
+            return;
+        }
         listelemeDizini.touch(dosyaAdi);
     }
 
