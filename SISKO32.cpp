@@ -320,49 +320,11 @@ bool Dizin::touch(string &dosyaAdi) {
 }
 
 vector<FatFileEntry> Dizin::dizinEntrileriOlustur(string &dizinAdi, bool klasordur) {
-    vector<FatFileEntry> dizinEntrileri;
-
     FatFileEntry dosya;
-    memset(&dosya.msdos, 0, sizeof(dosya));
-    memset(&dosya.msdos.filename, ' ', 11);
-    string uzanti = getUzanti(dizinAdi);
-    auto dizinAdiBoyutu = dizinAdi.size();
-    if (!uzanti.empty()) {
-        strncpy((char *) (dosya.msdos.extension), uzanti.c_str(), uzanti.size());
-        dizinAdiBoyutu -= uzanti.size() + 1;
-    }
-    if (dizinAdiBoyutu > 8) {
-        strncpy((char *) (dosya.msdos.filename), dizinAdi.c_str(), 6);
-        dosya.msdos.filename[6] = '~';
-        dosya.msdos.filename[7] = '1'; // todo: burasi kopya dosyalarda 1 den fazla olmalidir. lazim mi?
-    } else {
-        strncpy((char *) (dosya.msdos.filename), dizinAdi.c_str(), dizinAdiBoyutu);
-    }
-    buyukHarfYap((char *) dosya.msdos.filename, 11);
-    if (klasordur) {
-        dosya.msdos.attributes = 0x10;
-    } else {
-        dosya.msdos.attributes = 0x20;
-    }
-    dosya.msdos.setAllDateTimesToNow();
-    auto yeniClusterID = sisko32->yeniClusterAyir();
-    dosya.msdos.firstCluster = yeniClusterID & 0x0000FFFF;
-    dosya.msdos.eaIndex = yeniClusterID << 16;
+    dosya.msdos = fatFile83olustur(dizinAdi, klasordur);
 
+    vector<FatFileEntry> dizinEntrileri = FatFileLFNlerOlustur(dizinAdi, dosya.msdos.filename);
 
-    for (int i = 0; i < dizinAdi.size(); i += 13) {
-        FatFileEntry lfn;
-        lfn.lfn.setName(dizinAdi.substr(i, 13));
-        lfn.lfn.sequence_number = i + 1;
-        lfn.lfn.attributes = 0x0f;
-        lfn.lfn.reserved = 0x00;
-        lfn.lfn.firstCluster = 0x0000;
-        lfn.lfn.checksum = lfn.lfn.lfn_checksum(dosya.msdos.filename);
-        dizinEntrileri.push_back(lfn);
-    }
-    reverse(dizinEntrileri.begin(), dizinEntrileri.end());
-    // the entry representing the end of the filename comes first. The sequence number of this entry has bit 6 (0x40) set to represent that it is the last logical LFN entry
-    dizinEntrileri[0].lfn.sequence_number |= 0x40;
     dizinEntrileri.push_back(dosya);
 
     return dizinEntrileri;
@@ -448,4 +410,69 @@ bool Dizin::dizinEntrileriEkle(vector<FatFileEntry> &entriler) {
     }
     // null entry entrilerden silinir.
     entriler.pop_back();
+}
+
+FatFile83 Dizin::fatFile83olustur(string dizinAdi, bool klasordur) {
+    auto yeniClusterID = sisko32->yeniClusterAyir();
+    FatFile83 fatFile83 = fatFile83olustur(dizinAdi, klasordur, yeniClusterID);
+    if (klasordur) {
+        uint32_t anneClusterID = dizinClusterID;
+        if (anneClusterID == sisko32->fat_boot.extended.RootCluster) {
+            anneClusterID = 0;
+        }
+        FatFile83 nokta = fatFile83olustur(".", true, yeniClusterID);
+        FatFile83 noktaNokta = fatFile83olustur("..", true, anneClusterID);
+        fseek(sisko32->imajFP, sisko32->clusterBaytAdresi(yeniClusterID), SEEK_SET);
+        fwrite(&nokta, sizeof(FatFile83), 1, sisko32->imajFP);
+        fwrite(&noktaNokta, sizeof(FatFile83), 1, sisko32->imajFP);
+    }
+    return fatFile83;
+}
+
+FatFile83 Dizin::fatFile83olustur(string dizinAdi, bool klasordur, uint32_t firstClusterID) {
+    FatFile83 dosya{};
+
+    memset(&dosya.filename, ' ', 11);
+    string uzanti = getUzanti(dizinAdi);
+    auto dizinAdiBoyutu = dizinAdi.size();
+    if (!uzanti.empty()) {
+        strncpy((char *) (dosya.extension), uzanti.c_str(), uzanti.size());
+        dizinAdiBoyutu -= uzanti.size() + 1;
+    }
+    if (dizinAdiBoyutu > 8) {
+        strncpy((char *) (dosya.filename), dizinAdi.c_str(), 6);
+        dosya.filename[6] = '~';
+        dosya.filename[7] = '1'; // todo: burasi kopya dosyalarda 1 den fazla olmalidir. lazim mi?
+    } else {
+        strncpy((char *) (dosya.filename), dizinAdi.c_str(), dizinAdiBoyutu);
+    }
+    buyukHarfYap((char *) dosya.filename, 11);
+    if (klasordur) {
+        dosya.attributes = 0x10;
+    } else {
+        dosya.attributes = 0x20;
+    }
+    dosya.setAllDateTimesToNow();
+
+    dosya.firstCluster = firstClusterID & 0x0000FFFF;
+    dosya.eaIndex = firstClusterID << 16;
+    return dosya;
+}
+
+vector<FatFileEntry> Dizin::FatFileLFNlerOlustur(string &dizinAdi, const unsigned char *fatFile83filename) {
+    vector<FatFileEntry> dizinEntrileri;
+    for (int i = 0; i < dizinAdi.size(); i += 13) {
+        FatFileEntry lfn{};
+        lfn.lfn.setName(dizinAdi.substr(i, 13));
+        lfn.lfn.sequence_number = i + 1;
+        lfn.lfn.attributes = 0x0f;
+        lfn.lfn.reserved = 0x00;
+        lfn.lfn.firstCluster = 0x0000;
+        lfn.lfn.checksum = lfn.lfn.lfn_checksum(fatFile83filename);
+        dizinEntrileri.push_back(lfn);
+    }
+    reverse(dizinEntrileri.begin(), dizinEntrileri.end());
+    // the entry representing the end of the filename comes first. The sequence number of this entry has bit 6 (0x40) set to represent that it is the last logical LFN entry
+    dizinEntrileri[0].lfn.sequence_number |= 0x40;
+    return dizinEntrileri;
 }

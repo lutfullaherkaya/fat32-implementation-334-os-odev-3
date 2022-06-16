@@ -99,6 +99,11 @@ public:
     void cat();
 
     bool dizinEntrileriEkle(vector<FatFileEntry> &entriler);
+
+    FatFile83 fatFile83olustur(string dizinAdi, bool klasordur, uint32_t firstClusterID);
+    FatFile83 fatFile83olustur(string dizinAdi, bool klasordur);
+
+    static vector<FatFileEntry> FatFileLFNlerOlustur(string &dizinAdi, const unsigned char *fatFile83filename);
 };
 
 #endif //INC_334_OS_ODEV_3_SISKO32_H
