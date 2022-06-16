@@ -139,7 +139,7 @@ struct FatFile83 {
         uint16_t tarih = 0;
         tarih |= (ltm->tm_mday);
         tarih |= ((ltm->tm_mon) << 5);
-        tarih |= ((ltm->tm_year) << 9);
+        tarih |= ((ltm->tm_year - 80) << 9);
         return tarih;
 
     }

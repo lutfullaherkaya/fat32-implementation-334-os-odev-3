@@ -29,10 +29,60 @@ long SISKO32::clusterBaytAdresi(uint32_t clusterID) {
     return clusterSectorAdresi(clusterID) * fat_boot.BytesPerSector;
 }
 
-// todo:
-bool SISKO32::dizinEntrileriEkle(vector<FatFileEntry> &entriler) {
-    return false;
+uint32_t SISKO32::yeniClusterAyir(uint32_t baglanacakClusterID = 0) {
+    uint32_t yeniClusterID = freeClusterBul();
+    if (baglanacakClusterID) {
+        setSISKO(baglanacakClusterID, yeniClusterID);
+    }
+    setSISKO(yeniClusterID, 0x0FFFFFF8);
+
+    return yeniClusterID;
+
 }
+
+unsigned int SISKO32::getSISKO(uint32_t clusterID) {
+    auto first_fat_sector = fat_boot.ReservedSectorCount;
+    unsigned char FAT_table[fat_boot.BytesPerSector];
+    unsigned int fat_offset = clusterID * 4;
+    unsigned int fat_sector = first_fat_sector + (fat_offset / fat_boot.BytesPerSector);
+    unsigned int ent_offset = fat_offset % fat_boot.BytesPerSector;
+
+    fseek(imajFP, fat_sector * fat_boot.BytesPerSector, SEEK_SET);
+    fread(&FAT_table, sizeof(FAT_table), 1, imajFP);
+
+    unsigned int table_value = *(unsigned int *) &FAT_table[ent_offset];
+    table_value &= 0x0FFFFFFF;
+    return table_value;
+}
+
+uint32_t SISKO32::freeClusterBul() {
+    // tamamen verimsiz bir fonkksiyon ama onemli degil
+    unsigned long clusterSayisi = fat_boot.TotalSectors32 / fat_boot.SectorsPerCluster;
+    for (unsigned long id = 2; id < clusterSayisi; ++id) {
+        auto clusterID = getSISKO(id);
+        if (clusterID == 0) {
+            return id;
+        }
+    }
+    return 0;
+}
+
+bool SISKO32::setSISKO(uint32_t baglanacakClusterID, uint32_t degerClusterID) {
+    degerClusterID &= 0x0FFFFFFF;
+
+    for (int i = 0; i < fat_boot.NumFATs; ++i) {
+        auto first_fat_sector = fat_boot.ReservedSectorCount + i * fat_boot.extended.FATSize;
+        unsigned int fat_offset = baglanacakClusterID * 4;
+        unsigned int fat_sector = first_fat_sector + (fat_offset / fat_boot.BytesPerSector);
+        unsigned int ent_offset = fat_offset % fat_boot.BytesPerSector;
+
+        fseek(imajFP, fat_sector * fat_boot.BytesPerSector + ent_offset, SEEK_SET);
+        fwrite(&degerClusterID, sizeof(degerClusterID), 1, imajFP);
+    }
+
+    return true;
+}
+
 
 Dizin::Dizin(SISKO32 *sisko32) : sisko32(sisko32) {
     kokeCik();
@@ -46,7 +96,7 @@ bool Dizin::in(string &altDizin) {
     vector<FatFileLFN> longFileNamesBuffer;
     for (auto suankiCid = dizinClusterID;
          FatFile83::clusterVar(suankiCid);
-         suankiCid = sonrakiClusterID(suankiCid)) {
+         suankiCid = sisko32->getSISKO(suankiCid)) {
 
         fseek(sisko32->imajFP, sisko32->clusterBaytAdresi(suankiCid), SEEK_SET);
         for (int i = 0; i < sisko32->clusterAzamiEntrySayisi; ++i) {
@@ -57,9 +107,9 @@ bool Dizin::in(string &altDizin) {
             } else {
                 pair<vector<FatFileLFN>, FatFile83> cocukDizin = {longFileNamesBuffer, bilinmeyenDosya.msdos};
                 longFileNamesBuffer.clear();
-                if (dizinBosVeSonrasiYok(cocukDizin)) {
+                if (dizinBosVeSonrasiYok(cocukDizin.second)) {
                     break;
-                } else if (dizinSilinmis(cocukDizin)) {
+                } else if (dizinSilinmis(cocukDizin.second)) {
                     //
                 } else {
 
@@ -191,7 +241,7 @@ void Dizin::ls(bool ayrintili) {
     vector<FatFileLFN> longFileNamesBuffer;
     for (auto suankiCid = dizinClusterID;
          FatFile83::clusterVar(suankiCid);
-         suankiCid = sonrakiClusterID(suankiCid)) {
+         suankiCid = sisko32->getSISKO(suankiCid)) {
 
         fseek(sisko32->imajFP, sisko32->clusterBaytAdresi(suankiCid), SEEK_SET);
         for (int i = 0; i < sisko32->clusterAzamiEntrySayisi; ++i) {
@@ -202,9 +252,9 @@ void Dizin::ls(bool ayrintili) {
             } else {
                 pair<vector<FatFileLFN>, FatFile83> cocukDizin = {longFileNamesBuffer, bilinmeyenDosya.msdos};
                 longFileNamesBuffer.clear();
-                if (dizinBosVeSonrasiYok(cocukDizin)) {
+                if (dizinBosVeSonrasiYok(cocukDizin.second)) {
                     break;
-                } else if (dizinSilinmis(cocukDizin)) {
+                } else if (dizinSilinmis(cocukDizin.second)) {
                     //
                 } else {
                     if (!noktaDizinidir(cocukDizin)) {
@@ -239,29 +289,14 @@ void Dizin::ls(bool ayrintili) {
     }
 }
 
-unsigned int Dizin::sonrakiClusterID(uint32_t id) {
-    auto first_fat_sector = sisko32->fat_boot.ReservedSectorCount;
-    unsigned char FAT_table[sisko32->fat_boot.BytesPerSector];
-    unsigned int fat_offset = id * 4;
-    unsigned int fat_sector = first_fat_sector + (fat_offset / sisko32->fat_boot.BytesPerSector);
-    unsigned int ent_offset = fat_offset % sisko32->fat_boot.BytesPerSector;
 
-    fseek(sisko32->imajFP, fat_sector * sisko32->fat_boot.BytesPerSector, SEEK_SET);
-    fread(&FAT_table, sizeof(FAT_table), 1, sisko32->imajFP);
-
-    unsigned int table_value = *(unsigned int *) &FAT_table[ent_offset];
-    table_value &= 0x0FFFFFFF;
-    return table_value;
-
-}
-
-bool Dizin::dizinBosVeSonrasiYok(pair<vector<FatFileLFN>, FatFile83> dizin1) {
-    uint8_t ilkBayt = ((uint8_t *) &dizin1.second)[0];
+bool Dizin::dizinBosVeSonrasiYok(FatFile83 &dizin1) {
+    uint8_t ilkBayt = ((uint8_t *) &dizin1)[0];
     return ilkBayt == 0;
 }
 
-bool Dizin::dizinSilinmis(pair<vector<FatFileLFN>, FatFile83> dizin1) {
-    uint8_t ilkBayt = ((uint8_t *) &dizin1.second)[0];
+bool Dizin::dizinSilinmis(FatFile83 &dizin1) {
+    uint8_t ilkBayt = ((uint8_t *) &dizin1)[0];
     return ilkBayt == 0xE5 || ilkBayt == 0x05;
 }
 
@@ -275,13 +310,12 @@ bool Dizin::noktaDizinidir(pair<vector<FatFileLFN>, FatFile83> dizin1) {
 
 bool Dizin::mkdir(string &dizinAdi) {
     vector<FatFileEntry> entriler = dizinEntrileriOlustur(dizinAdi, true);
-    sisko32->dizinEntrileriEkle(entriler);
-    return true;
+    return dizinEntrileriEkle(entriler);
 }
 
 bool Dizin::touch(string &dosyaAdi) {
     vector<FatFileEntry> entriler = dizinEntrileriOlustur(dosyaAdi, false);
-    sisko32->dizinEntrileriEkle(entriler);
+    dizinEntrileriEkle(entriler);
     return true;
 }
 
@@ -311,12 +345,15 @@ vector<FatFileEntry> Dizin::dizinEntrileriOlustur(string &dizinAdi, bool klasord
         dosya.msdos.attributes = 0x20;
     }
     dosya.msdos.setAllDateTimesToNow();
+    auto yeniClusterID = sisko32->yeniClusterAyir();
+    dosya.msdos.firstCluster = yeniClusterID & 0x0000FFFF;
+    dosya.msdos.eaIndex = yeniClusterID << 16;
 
 
     for (int i = 0; i < dizinAdi.size(); i += 13) {
         FatFileEntry lfn;
         lfn.lfn.setName(dizinAdi.substr(i, 13));
-        lfn.lfn.sequence_number = i+1;
+        lfn.lfn.sequence_number = i + 1;
         lfn.lfn.attributes = 0x0f;
         lfn.lfn.reserved = 0x00;
         lfn.lfn.firstCluster = 0x0000;
@@ -334,7 +371,7 @@ vector<FatFileEntry> Dizin::dizinEntrileriOlustur(string &dizinAdi, bool klasord
 void Dizin::cat() {
     for (auto suankiCid = dizinClusterID;
          FatFile83::clusterVar(suankiCid);
-         suankiCid = sonrakiClusterID(suankiCid)) {
+         suankiCid = sisko32->getSISKO(suankiCid)) {
 
         auto *sektor = new uint8_t[sisko32->fat_boot.BytesPerSector];
         fseek(sisko32->imajFP, sisko32->clusterBaytAdresi(suankiCid), SEEK_SET);
@@ -346,4 +383,69 @@ void Dizin::cat() {
         }
         delete[] sektor;
     }
+}
+
+bool Dizin::dizinEntrileriEkle(vector<FatFileEntry> &entriler) {
+    if (entriler.empty()) {
+        return true;
+    }
+    FatFileEntry nullEntri{};
+    entriler.push_back(nullEntri);
+
+    unsigned long yazilacakEntriIndeks = 0;
+    bool yaziliyor = false;
+    bool yazmaBitti = false;
+    uint32_t sonErisilenCid = dizinClusterID;
+    for (auto suankiCid = dizinClusterID;
+         !yazmaBitti && FatFile83::clusterVar(suankiCid);
+         suankiCid = sisko32->getSISKO(suankiCid)) {
+        sonErisilenCid = suankiCid;
+
+        fseek(sisko32->imajFP, sisko32->clusterBaytAdresi(suankiCid), SEEK_SET);
+        for (int i = 0; i < sisko32->clusterAzamiEntrySayisi; ++i) {
+
+            if (!yaziliyor) {
+                FatFileEntry bilinmeyenDosya;
+                fread(&bilinmeyenDosya, sizeof(bilinmeyenDosya), 1, sisko32->imajFP);
+                if (!bilinmeyenDosya.longFileNamedir()) {
+                    if (dizinBosVeSonrasiYok(bilinmeyenDosya.msdos)) {
+                        yaziliyor = true;
+                        fseek(sisko32->imajFP, -((long) sizeof(bilinmeyenDosya)), SEEK_CUR);
+                        i--;
+                    } else if (dizinSilinmis(bilinmeyenDosya.msdos)) {
+                        // bosluklar doldurulabilir ama gerek yok.
+                    }
+                }
+            } else {
+                if (yazilacakEntriIndeks < entriler.size()) {
+                    fwrite(&entriler[yazilacakEntriIndeks], sizeof(FatFileEntry), 1, sisko32->imajFP);
+                    yazilacakEntriIndeks++;
+
+                }
+                if (yazilacakEntriIndeks >= entriler.size()) {
+                    yazmaBitti = true;
+                    yaziliyor = false;
+                    break;
+                }
+
+            }
+        }
+    }
+    while (!yazmaBitti) {
+        sonErisilenCid = sisko32->yeniClusterAyir(sonErisilenCid);
+        fseek(sisko32->imajFP, sisko32->clusterBaytAdresi(sonErisilenCid), SEEK_SET);
+        for (int i = 0; i < sisko32->clusterAzamiEntrySayisi; ++i) {
+            if (yazilacakEntriIndeks < entriler.size()) {
+                fwrite(&entriler[yazilacakEntriIndeks], sizeof(FatFileEntry), 1, sisko32->imajFP);
+                yazilacakEntriIndeks++;
+            }
+            if (yazilacakEntriIndeks >= entriler.size()) {
+                yazmaBitti = true;
+                yaziliyor = false;
+                break;
+            }
+        }
+    }
+    // null entry entrilerden silinir.
+    entriler.pop_back();
 }

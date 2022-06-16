@@ -36,7 +36,13 @@ public:
 
     int clusterAzamiEntrySayisi;
 
-    bool dizinEntrileriEkle(vector<FatFileEntry> &entriler);
+    uint32_t yeniClusterAyir(uint32_t baglanacakClusterID);
+
+    unsigned int getSISKO(uint32_t clusterID);
+
+    uint32_t freeClusterBul();
+
+    bool setSISKO(uint32_t baglanacakClusterID, uint32_t degerClusterID);
 };
 
 class Dizin {
@@ -74,11 +80,11 @@ public:
 
     void ls(bool ayrintili);
 
-    unsigned int sonrakiClusterID(uint32_t id);
 
-    static bool dizinBosVeSonrasiYok(pair<vector<FatFileLFN>, FatFile83> dizin1);
 
-    static bool dizinSilinmis(pair<vector<FatFileLFN>, FatFile83> dizin1);
+    static bool dizinBosVeSonrasiYok(FatFile83 &dizin1);
+
+    static bool dizinSilinmis(FatFile83 &dizin1);
 
     static bool klasordur(const pair<vector<FatFileLFN>, FatFile83>& dizin1);
 
@@ -91,6 +97,8 @@ public:
     vector<FatFileEntry> dizinEntrileriOlustur(string &dizinAdi, bool klasordur);
 
     void cat();
+
+    bool dizinEntrileriEkle(vector<FatFileEntry> &entriler);
 };
 
 #endif //INC_334_OS_ODEV_3_SISKO32_H
