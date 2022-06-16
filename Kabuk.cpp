@@ -46,10 +46,9 @@ void Kabuk::ls(std::vector<string> &arglar) {
 }
 
 void Kabuk::mkdir(std::vector<string> &arglar) {
-    auto listelemeDizini = Dizin(&sisko32);
+    auto listelemeDizini = Dizin(suAnkiDizin);
 
     vector<string> gidilecekDizinKelimeleri = ayir(arglar[1], '/');
-
     string dizinAdi = gidilecekDizinKelimeleri.back();
     gidilecekDizinKelimeleri.pop_back();
 
@@ -65,14 +64,13 @@ void Kabuk::mkdir(std::vector<string> &arglar) {
 }
 
 void Kabuk::touch(std::vector<string> &arglar) {
-    auto listelemeDizini = Dizin(&sisko32);
+    auto listelemeDizini = Dizin(suAnkiDizin);
 
     vector<string> gidilecekDizinKelimeleri = ayir(arglar[1], '/');
-
     string dosyaAdi = gidilecekDizinKelimeleri.back();
     gidilecekDizinKelimeleri.pop_back();
 
-    if(listelemeDizini.git(gidilecekDizinKelimeleri)) {
+    if (listelemeDizini.git(gidilecekDizinKelimeleri)) {
         if (listelemeDizini.git(dosyaAdi)) { // dosya zaten varmis.
             promptYaz();
             return;

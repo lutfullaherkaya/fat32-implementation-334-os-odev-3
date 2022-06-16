@@ -239,6 +239,7 @@ bool Dizin::git(vector<string> &gidilecekDizinKelimeleri) {
 
 void Dizin::ls(bool ayrintili) {
     vector<FatFileLFN> longFileNamesBuffer;
+    bool dizinBos = true;
     for (auto suankiCid = dizinClusterID;
          FatFile83::clusterVar(suankiCid);
          suankiCid = sisko32->getSISKO(suankiCid)) {
@@ -258,6 +259,7 @@ void Dizin::ls(bool ayrintili) {
                     //
                 } else {
                     if (!noktaDizinidir(cocukDizin)) {
+                        dizinBos = false;
                         string cocukDizinAdi = dizinAdi(cocukDizin);
                         if (ayrintili) {
                             if (klasordur(cocukDizin)) {
@@ -284,7 +286,7 @@ void Dizin::ls(bool ayrintili) {
             }
         }
     }
-    if (!ayrintili) {
+    if (!ayrintili && !dizinBos) {
         cout << endl;
     }
 }
@@ -315,8 +317,7 @@ bool Dizin::mkdir(string &dizinAdi) {
 
 bool Dizin::touch(string &dosyaAdi) {
     vector<FatFileEntry> entriler = dizinEntrileriOlustur(dosyaAdi, false);
-    dizinEntrileriEkle(entriler);
-    return true;
+    return dizinEntrileriEkle(entriler);
 }
 
 vector<FatFileEntry> Dizin::dizinEntrileriOlustur(string &dizinAdi, bool klasordur) {

@@ -29,6 +29,8 @@ int main(int argc, char** argv) {
                 kabuk.mv(komutKelimeleri);
             } else if (komutKelimeleri[0] == "cat") {
                 kabuk.cat(komutKelimeleri);
+            } else {
+                kabuk.promptYaz();
             }
         }
 
