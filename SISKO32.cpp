@@ -477,3 +477,47 @@ vector<FatFileEntry> Dizin::FatFileLFNlerOlustur(string &dizinAdi, const unsigne
     dizinEntrileri[0].lfn.sequence_number |= 0x40;
     return dizinEntrileri;
 }
+
+bool Dizin::fatFileEntrySil(string altDizin) {
+    vector<FatFileLFN> longFileNamesBuffer;
+    for (auto suankiCid = dizinClusterID;
+         FatFile83::clusterVar(suankiCid);
+         suankiCid = sisko32->getSISKO(suankiCid)) {
+
+        fseek(sisko32->imajFP, sisko32->clusterBaytAdresi(suankiCid), SEEK_SET);
+        for (int i = 0; i < sisko32->clusterAzamiEntrySayisi; ++i) {
+            FatFileEntry bilinmeyenDosya;
+            fread(&bilinmeyenDosya, sizeof(bilinmeyenDosya), 1, sisko32->imajFP);
+            if (bilinmeyenDosya.longFileNamedir()) {
+                longFileNamesBuffer.push_back(bilinmeyenDosya.lfn);
+            } else {
+                pair<vector<FatFileLFN>, FatFile83> cocukDizin = {longFileNamesBuffer, bilinmeyenDosya.msdos};
+                auto lfnSayisi = longFileNamesBuffer.size();
+                longFileNamesBuffer.clear();
+                if (dizinBosVeSonrasiYok(cocukDizin.second)) {
+                    break;
+                } else if (dizinSilinmis(cocukDizin.second)) {
+                    //
+                } else {
+                    string cocukDizinAdi = dizinAdi(cocukDizin);
+                    if (cocukDizinAdi == altDizin) {
+                        FatFileEntry silinmisDosya{};
+                        ((uint8_t*)&silinmisDosya.msdos.filename)[0] = 0xE5;
+                        fseek(sisko32->imajFP, -((lfnSayisi + 1) * sizeof(FatFileEntry)), SEEK_CUR);
+                        for (int j = 0; j < (lfnSayisi+1); ++j) {
+                            fwrite(&silinmisDosya, sizeof(FatFileEntry), 1, sisko32->imajFP);
+                        }
+                        dizin = cocukDizin;
+                        dizinClusterID = cocukDizin.second.clusterID();
+                        if (dizinClusterID == 0) {
+                            dizinClusterID = 2; // .. olunca rootu 0 olarak gosteriyor.
+                        }
+                        dizinKelimeleri.push_back(altDizin);
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}

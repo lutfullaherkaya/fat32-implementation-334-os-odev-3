@@ -231,7 +231,8 @@ union FatFileEntry {
 
     bool longFileNamedir() {
         uint8_t bayt11 = ((uint8_t *) this)[11];
-        return bayt11 == 0x0F;
+        uint8_t ilkBayt = ((uint8_t *) this)[0];
+        return (ilkBayt != 0) && (ilkBayt != 0xE5) && (ilkBayt != 0x05) && (bayt11 == 0x0F);
     }
 };
 

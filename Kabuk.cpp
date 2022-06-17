@@ -34,7 +34,11 @@ void Kabuk::ls(std::vector<string> &arglar) {
     Dizin *listelemeDizini = &suAnkiDizin;
     if (yol) {
         listelemeDizini = new Dizin(&sisko32);
-        listelemeDizini->git(*yol);
+        if (!listelemeDizini->git(*yol)) {
+            delete listelemeDizini;
+            promptYaz();
+            return;
+        }
     }
 
     listelemeDizini->ls(ayrintili);
@@ -82,12 +86,49 @@ void Kabuk::touch(std::vector<string> &arglar) {
 }
 
 void Kabuk::mv(std::vector<string> &arglar) {
-    /**
-     * todo: kolay yolu:
-     * 1 - traversal yapıp babasını bul, babasının çocuğu olan entry'i silik olarak işaretle. bu entry en üst klasör zaten
-     * Çocuk entryi kopyala.
-     * eklenecek yere çocuk olarak ekle. zaten en üst klasör olduğu için başka bir şey yapmana gerek yok.
-     */
+    vector<string> gidilecekDizinKelimeleri = ayir(arglar[1], '/');
+    if (!gidilecekDizinKelimeleri.empty() && arglar.size() == 3) {
+        auto listelemeDizini = Dizin(suAnkiDizin);
+        string dosyaAdi = gidilecekDizinKelimeleri.back();
+        gidilecekDizinKelimeleri.pop_back();
+
+        if (listelemeDizini.git(gidilecekDizinKelimeleri)) {
+            if (listelemeDizini.git(dosyaAdi)) {
+                pair<vector<FatFileLFN>, FatFile83> dizin = listelemeDizini.dizin;
+                listelemeDizini.ustDizineCik();
+
+                if (listelemeDizini.fatFileEntrySil(dosyaAdi)) {
+                    Dizin hedefDizin(suAnkiDizin);
+                    if (hedefDizin.git(arglar[2])) {
+                        vector<FatFileEntry> entriler;
+                        for (auto &lfn: dizin.first) {
+                            FatFileEntry ffn;
+                            ffn.lfn = lfn;
+                            entriler.push_back(ffn);
+                        }
+                        FatFileEntry ffn;
+                        ffn.msdos = dizin.second;
+                        entriler.push_back(ffn);
+                        hedefDizin.dizinEntrileriEkle(entriler);
+                        auto anaAdi = hedefDizin.dizinClusterID;
+                        hedefDizin.git(dosyaAdi);
+
+
+                        fseek(sisko32.imajFP, sisko32.clusterBaytAdresi(hedefDizin.dizinClusterID)+sizeof(FatFile83), SEEK_SET);
+                        FatFile83 noktaNokta;
+                        fread(&noktaNokta, sizeof(FatFile83), 1, sisko32.imajFP);
+
+                        noktaNokta.firstCluster = anaAdi & 0x0000FFFF;
+                        noktaNokta.eaIndex = anaAdi << 16;
+
+                        fseek(sisko32.imajFP, sisko32.clusterBaytAdresi(hedefDizin.dizinClusterID)+sizeof(FatFile83), SEEK_SET);
+                        fwrite(&noktaNokta, sizeof(FatFile83), 1, sisko32.imajFP);
+                    }
+                }
+            }
+        }
+    }
+    promptYaz();
 }
 
 void Kabuk::cat(std::vector<string> &arglar) {
