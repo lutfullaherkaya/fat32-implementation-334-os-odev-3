@@ -92,7 +92,7 @@ bool Dizin::kokDizindir() {
     return dizinKelimeleri.empty();
 }
 
-bool Dizin::in(string &altDizin) {
+bool Dizin::in(string altDizin) {
     vector<FatFileLFN> longFileNamesBuffer;
     for (auto suankiCid = dizinClusterID;
          FatFile83::clusterVar(suankiCid);
@@ -154,10 +154,11 @@ pair<vector<FatFileLFN>, FatFile83> Dizin::dizinOku() {
 }
 
 void Dizin::ustDizineCik() {
-    string ustDizin = "..";
-    in(ustDizin);
-    dizinKelimeleri.pop_back();
-    dizinKelimeleri.pop_back();
+    if (!kokDizindir()) {
+        in("..");
+        dizinKelimeleri.pop_back();
+        dizinKelimeleri.pop_back();
+    }
 }
 
 void Dizin::dizinAtla() {
@@ -216,12 +217,7 @@ bool Dizin::git(vector<string> &gidilecekDizinKelimeleri) {
     }
     for (auto &kelime: gidilecekDizinKelimeleri) {
         if (kelime == "..") {
-            if (kokDizindir()) {
-                *this = orijinalDizin;
-                return false;
-            } else {
-                ustDizineCik();
-            }
+            ustDizineCik();
         } else if (kelime == ".") { // mesela ./drives/./etc
             //
         } else if (kelime == "") { // mesela ./drives//etc
@@ -310,13 +306,8 @@ bool Dizin::noktaDizinidir(pair<vector<FatFileLFN>, FatFile83> dizin1) {
     return ((uint8_t *) (&dizin1.second))[0] == 0x2E;
 }
 
-bool Dizin::mkdir(string &dizinAdi) {
-    vector<FatFileEntry> entriler = dizinEntrileriOlustur(dizinAdi, true);
-    return dizinEntrileriEkle(entriler);
-}
-
-bool Dizin::touch(string &dosyaAdi) {
-    vector<FatFileEntry> entriler = dizinEntrileriOlustur(dosyaAdi, false);
+bool Dizin::dosyaOlustur(string &dosyaAdi, bool klasordur) {
+    vector<FatFileEntry> entriler = dizinEntrileriOlustur(dosyaAdi, klasordur);
     return dizinEntrileriEkle(entriler);
 }
 
@@ -502,9 +493,9 @@ bool Dizin::fatFileEntrySil(string altDizin) {
                     string cocukDizinAdi = dizinAdi(cocukDizin);
                     if (cocukDizinAdi == altDizin) {
                         FatFileEntry silinmisDosya{};
-                        ((uint8_t*)&silinmisDosya.msdos.filename)[0] = 0xE5;
+                        ((uint8_t *) &silinmisDosya.msdos.filename)[0] = 0xE5;
                         fseek(sisko32->imajFP, -((lfnSayisi + 1) * sizeof(FatFileEntry)), SEEK_CUR);
-                        for (int j = 0; j < (lfnSayisi+1); ++j) {
+                        for (int j = 0; j < (lfnSayisi + 1); ++j) {
                             fwrite(&silinmisDosya, sizeof(FatFileEntry), 1, sisko32->imajFP);
                         }
                         dizin = cocukDizin;

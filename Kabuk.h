@@ -38,6 +38,8 @@ public:
 
     SISKO32 &sisko32;
     Dizin suAnkiDizin;
+
+    void dosyaOlustur(vector<string> &arglar, bool klasordur);
 };
 
 

@@ -50,6 +50,16 @@ void Kabuk::ls(std::vector<string> &arglar) {
 }
 
 void Kabuk::mkdir(std::vector<string> &arglar) {
+    dosyaOlustur(arglar, true);
+    promptYaz();
+}
+
+void Kabuk::touch(std::vector<string> &arglar) {
+    dosyaOlustur(arglar, false);
+    promptYaz();
+}
+
+void Kabuk::dosyaOlustur(vector<string> &arglar, bool klasordur) {
     auto listelemeDizini = Dizin(suAnkiDizin);
 
     vector<string> gidilecekDizinKelimeleri = ayir(arglar[1], '/');
@@ -57,32 +67,10 @@ void Kabuk::mkdir(std::vector<string> &arglar) {
     gidilecekDizinKelimeleri.pop_back();
 
     if (listelemeDizini.git(gidilecekDizinKelimeleri)) {
-        if (listelemeDizini.git(dizinAdi)) { // klasor zaten varmis.
-            promptYaz();
-            return;
+        if (!listelemeDizini.git(dizinAdi)) { // zaten varmis.
+            listelemeDizini.dosyaOlustur(dizinAdi, klasordur);
         }
-        listelemeDizini.mkdir(dizinAdi);
     }
-
-    promptYaz();
-}
-
-void Kabuk::touch(std::vector<string> &arglar) {
-    auto listelemeDizini = Dizin(suAnkiDizin);
-
-    vector<string> gidilecekDizinKelimeleri = ayir(arglar[1], '/');
-    string dosyaAdi = gidilecekDizinKelimeleri.back();
-    gidilecekDizinKelimeleri.pop_back();
-
-    if (listelemeDizini.git(gidilecekDizinKelimeleri)) {
-        if (listelemeDizini.git(dosyaAdi)) { // dosya zaten varmis.
-            promptYaz();
-            return;
-        }
-        listelemeDizini.touch(dosyaAdi);
-    }
-
-    promptYaz();
 }
 
 void Kabuk::mv(std::vector<string> &arglar) {
@@ -156,3 +144,5 @@ void Kabuk::promptYaz() {
     }
 
 }
+
+

@@ -64,7 +64,7 @@ public:
 
     bool kokDizindir();
 
-    bool in(string &altDizin);
+    bool in(string altDizin);
 
     void kokeCik();
 
@@ -90,9 +90,7 @@ public:
 
     static bool noktaDizinidir(pair<vector<FatFileLFN>, FatFile83> dizin1);
 
-    bool mkdir(string& dizinAdi);
-
-    bool touch(string& dosyaAdi);
+    bool dosyaOlustur(string &dosyaAdi, bool klasordur);
 
     vector<FatFileEntry> dizinEntrileriOlustur(string &dizinAdi, bool klasordur);
 
