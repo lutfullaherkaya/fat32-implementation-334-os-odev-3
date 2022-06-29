@@ -43,6 +43,10 @@ public:
     uint32_t freeClusterBul();
 
     bool setSISKO(uint32_t baglanacakClusterID, uint32_t degerClusterID);
+
+    FatFileEntry diskEntriOku(long adres);
+
+    void diskEntriYaz(long adres, FatFileEntry *entriPtr);
 };
 
 class Dizin {
@@ -60,8 +64,6 @@ public:
     static string filenamedenStrye(uint8_t *fname, int len);
 
 
-    pair<vector<FatFileLFN>, FatFile83> dizinOku();
-
     bool kokDizindir();
 
     bool in(string altDizin);
@@ -72,8 +74,9 @@ public:
     pair<vector<FatFileLFN>, FatFile83> dizin;
     vector<string> dizinKelimeleri;
     uint32_t dizinClusterID;
+    long fatFile83Adresi;
 
-    void dizinAtla();
+    void fatFile83DiskeYaz();
 
     bool git(string &yol);
     bool git(vector<string> &gidilecekDizinKelimeleri);
@@ -90,13 +93,14 @@ public:
 
     static bool noktaDizinidir(pair<vector<FatFileLFN>, FatFile83> dizin1);
 
-    bool dosyaOlustur(string &dosyaAdi, bool klasordur);
+    void dosyaOlustur(string &dosyaAdi, bool klasordur);
 
     vector<FatFileEntry> dizinEntrileriOlustur(string &dizinAdi, bool klasordur);
 
     void cat();
 
     bool dizinEntrileriEkle(vector<FatFileEntry> &entriler);
+    bool dizinEntrileriEkle(pair<vector<FatFileLFN>, FatFile83>& dizinEntrileri);
 
     FatFile83 fatFile83olustur(string dizinAdi, bool klasordur, uint32_t firstClusterID);
     FatFile83 fatFile83olustur(string dizinAdi, bool klasordur);

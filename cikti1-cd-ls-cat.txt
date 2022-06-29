@@ -1,0 +1,19 @@
+/> ls
+folder1 folder2 folder3 file1 file2 file3 ben.txt bb.txt fol3
+/> cd folder1
+/folder1> ls
+folder1 folder2 folder3 file1 file2 file3
+/folder1> cd ..
+/> cd ..
+/> cd ../../../././/
+/> cd file1
+/> cat file1
+lase workload omission amy angiosperm hermetic Uniroyal barbarous polyploidy henpeck batik algae linseed abutted synaptic lessen weapon septic haplology Royce busywork exist Gerber supernatant god cormorant Weinberg thimbleful vat Boylston struggle Hayes livid breve occipital Shakespearian alkaline entity imposture doubtful nought aristocratic squashy Maier serial zigzag inaction actinolite steal downplay Bassett baseline navel canal dome pyrotechnic Brahmaputra hemisphere prune instill Jed insect binaural quintet masculine gunshot steradian Pocono narcissist Santayana Minneapolis vex sexy icosahedra modulate inject daisy Hadrian glisten elution message junkerdom sleek Potomac Syria countervail executrix suffuse known capitol snub jinx Dryden wren choirmaster pencil become Tommie polyhedral errata Curtis inflict percussive decelerate evoke bullwhack e perihelion toffee decline gee affiliate jalopy lustrous hatchery spoke inferred labradorite therefrom Sophie Adolphus metamorphic trencherman brew steam possum spawn gorgeous imperishable apostate room she many cahoot courtesy Pizarro Frigidaire extolled Bern view Appleby gesticulate Monroe shipbuild basilisk peasant
+/> cat /folder1/../file2
+dosage candle sanguinary insert breadboard altogether quadrilateral Dalzell wigmake terramycin Scarborough newcomer afternoon aardvark marshy Moslem morsel ballet marzipan especial divisible Manitoba maria bistate Bridgewater Gouda Lovelace Grenoble heterocyclic neurasthenic shriek carousel colza taper Muong choirmaster shortfall moss delusion slither Dudley kwashiorkor polis administer granite bay Cranston demography Conestoga pemmican russula Hearst sleazy Jablonsky plod cosec karyatid pernicious cetera incidental appear propyl tube harken unipolar occipital hide arboretum longitudinal locomotor craftsmen Jeffrey sandwich adult ethereal dichloride distribution lexicography shiny cosec ventriloquist tartar leprosy beauty cocktail gibby account checksum prefecture grocer janissary assay smelly air copyright Jonathan putative teem convulsion emendable nature between quaternary spectra consultant blest seal ascendant amphioxis karyatid Delaney carpenter swag Madras Marlene Eros uprise sight liquor propensity chalky potion Fontaine gentlemen mortise tassel region Emery mobcap husbandmen attack brimful hacksaw ceremonious policy Chinese quad cataract stout clutter apiary carol connivance oracular discreet Germany swami chunky book companionway hyperthermia amalgam brakeman microbe commerce Wronskian cent extoller checksummed flagging Sherman chic sift ado monastery crochet triangle torr Darwinian thoroughbred Grenoble afro anneal Kajar him lustrous surpass panther pendulous discus morass Uranus Dravidian downdraft tractor bluster Roosevelt bulrush Poland hypothalamic alphabetic rubdown warble Velasquez dragnet bring Idaho symphony wean cartridge pear
+/> cd folder2
+/folder2> cat /file3
+Herodotus permissive chimney genotype promote men kaolin bing Kristin Baltic Alpheratz scherzo Neanderthal bowman palliate pier cuneiform crises Ohio transplantation returnee perceptual thesaurus rest Antilles wherewith leachate ye pilgrim blithe gluttony Kilimanjaro listen typhus incongruity humid c's thrift wraparound contest nevertheless counterthreat indisposition contour academy Mycenaean Mephistopheles never eaten midnight neuter disembowel hermaphroditic zeta
+/folder2> quit
+
+Process finished with exit code 0

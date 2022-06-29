@@ -10,8 +10,8 @@ int main(int argc, char** argv) {
     SISKO32 sisko(argv[1]);
     Kabuk kabuk(&sisko);
     vector<string> komutKelimeleri;
-    kabuk.promptYaz();
     do {
+        kabuk.promptYaz();
         string komut;
         getline(cin, komut);
         komutKelimeleri = ayir(komut, ' ');
@@ -29,8 +29,6 @@ int main(int argc, char** argv) {
                 kabuk.mv(komutKelimeleri);
             } else if (komutKelimeleri[0] == "cat") {
                 kabuk.cat(komutKelimeleri);
-            } else {
-                kabuk.promptYaz();
             }
         }
 

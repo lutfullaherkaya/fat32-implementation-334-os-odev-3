@@ -7,8 +7,13 @@
 
 
 void Kabuk::cd(vector<string> &arglar) {
-    suAnkiDizin.git(arglar[1]);
-    promptYaz();
+    Dizin cdDizini(suAnkiDizin);
+    if (cdDizini.git(arglar[1])) {
+        if (Dizin::klasordur(cdDizini.dizin)) {
+            suAnkiDizin = cdDizini;
+        }
+    }
+
 }
 
 /**
@@ -31,32 +36,22 @@ void Kabuk::ls(std::vector<string> &arglar) {
             yol = &arglar[2];
         }
     }
-    Dizin *listelemeDizini = &suAnkiDizin;
+
+    Dizin listelemeDizini(suAnkiDizin);
     if (yol) {
-        listelemeDizini = new Dizin(&sisko32);
-        if (!listelemeDizini->git(*yol)) {
-            delete listelemeDizini;
-            promptYaz();
+        if (!listelemeDizini.git(*yol)) {
             return;
         }
     }
-
-    listelemeDizini->ls(ayrintili);
-
-    if (listelemeDizini != &suAnkiDizin) {
-        delete listelemeDizini;
-    }
-    promptYaz();
+    listelemeDizini.ls(ayrintili);
 }
 
 void Kabuk::mkdir(std::vector<string> &arglar) {
     dosyaOlustur(arglar, true);
-    promptYaz();
 }
 
 void Kabuk::touch(std::vector<string> &arglar) {
     dosyaOlustur(arglar, false);
-    promptYaz();
 }
 
 void Kabuk::dosyaOlustur(vector<string> &arglar, bool klasordur) {
@@ -74,51 +69,32 @@ void Kabuk::dosyaOlustur(vector<string> &arglar, bool klasordur) {
 }
 
 void Kabuk::mv(std::vector<string> &arglar) {
+    Dizin kaynakDizinAnnesi(suAnkiDizin);
     Dizin hedefDizin(suAnkiDizin);
-    if (!hedefDizin.git(arglar[2])) {
-        promptYaz();
+    if (arglar.size() != 3 || !hedefDizin.git(arglar[2])) {
         return;
     }
-    vector<string> gidilecekDizinKelimeleri = ayir(arglar[1], '/');
-    if (!gidilecekDizinKelimeleri.empty() && arglar.size() == 3) {
-        auto listelemeDizini = Dizin(suAnkiDizin);
-        string dosyaAdi = gidilecekDizinKelimeleri.back();
-        gidilecekDizinKelimeleri.pop_back();
 
-        if (listelemeDizini.git(gidilecekDizinKelimeleri) && listelemeDizini.git(dosyaAdi)) {
-            pair<vector<FatFileLFN>, FatFile83> dizin = listelemeDizini.dizin;
-            listelemeDizini.ustDizineCik();
-            if (listelemeDizini.fatFileEntrySil(dosyaAdi)) {
-                vector<FatFileEntry> entriler;
-                for (auto &lfn: dizin.first) {
-                    FatFileEntry ffn;
-                    ffn.lfn = lfn;
-                    entriler.push_back(ffn);
-                }
-                FatFileEntry ffn;
-                ffn.msdos = dizin.second;
-                entriler.push_back(ffn);
-                hedefDizin.dizinEntrileriEkle(entriler);
-                auto anaAdi = hedefDizin.dizinClusterID;
-                hedefDizin.git(dosyaAdi);
+    vector<string> kaynakDizinKelimeleri = ayir(arglar[1], '/');
+    string kaynakDizinAdi = kaynakDizinKelimeleri.back();
+    kaynakDizinKelimeleri.pop_back();
 
+    if (kaynakDizinAnnesi.git(kaynakDizinKelimeleri)) {
+        Dizin kaynakDizin(kaynakDizinAnnesi);
+        if (kaynakDizin.git(kaynakDizinAdi) && !kaynakDizin.kokDizindir()) {
+            if (kaynakDizinAnnesi.fatFileEntrySil(kaynakDizinAdi)) {
+                hedefDizin.dizinEntrileriEkle(kaynakDizin.dizin);
 
-                fseek(sisko32.imajFP, sisko32.clusterBaytAdresi(hedefDizin.dizinClusterID) + sizeof(FatFile83),
-                      SEEK_SET);
-                FatFile83 noktaNokta;
-                fread(&noktaNokta, sizeof(FatFile83), 1, sisko32.imajFP);
+                auto anaID = hedefDizin.dizinClusterID;
+                hedefDizin.git(kaynakDizinAdi);
 
-                noktaNokta.firstCluster = anaAdi & 0x0000FFFF;
-                noktaNokta.eaIndex = anaAdi << 16;
-
-                fseek(sisko32.imajFP, sisko32.clusterBaytAdresi(hedefDizin.dizinClusterID) + sizeof(FatFile83),
-                      SEEK_SET);
-                fwrite(&noktaNokta, sizeof(FatFile83), 1, sisko32.imajFP);
+                FatFile83 noktaNokta = sisko32.diskEntriOku(sisko32.clusterBaytAdresi(hedefDizin.dizinClusterID) + sizeof(FatFile83)).msdos;
+                noktaNokta.firstCluster = anaID & 0x0000FFFF;
+                noktaNokta.eaIndex = anaID << 16;
+                sisko32.diskEntriYaz(sisko32.clusterBaytAdresi(hedefDizin.dizinClusterID) + sizeof(FatFile83), (FatFileEntry*)&noktaNokta);
             }
-
         }
     }
-    promptYaz();
 }
 
 void Kabuk::cat(std::vector<string> &arglar) {
@@ -126,7 +102,6 @@ void Kabuk::cat(std::vector<string> &arglar) {
     if (okunacakDizin.git(arglar[1])) {
         okunacakDizin.cat();
     }
-    promptYaz();
 }
 
 

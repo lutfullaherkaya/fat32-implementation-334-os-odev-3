@@ -1,0 +1,12 @@
+ls
+cd folder1
+ls
+cd ..
+cd ..
+cd ../../../././/
+cd file1
+cat file1
+cat /folder1/../file2
+cd folder2
+cat /file3
+quit
