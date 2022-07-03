@@ -81,7 +81,7 @@ void Kabuk::mv(std::vector<string> &arglar) {
 
     if (kaynakDizinAnnesi.git(kaynakDizinKelimeleri)) {
         Dizin kaynakDizin(kaynakDizinAnnesi);
-        if (kaynakDizin.git(kaynakDizinAdi) && !kaynakDizin.kokDizindir()) {
+        if (kaynakDizin.git(kaynakDizinAdi) && !kaynakDizin.kokDizindir() && kaynakDizin != suAnkiDizin) {
             if (kaynakDizinAnnesi.fatFileEntrySil(kaynakDizinAdi)) {
                 hedefDizin.dizinEntrileriEkle(kaynakDizin.dizin);
 
@@ -90,7 +90,7 @@ void Kabuk::mv(std::vector<string> &arglar) {
 
                 FatFile83 noktaNokta = sisko32.diskEntriOku(sisko32.clusterBaytAdresi(hedefDizin.dizinClusterID) + sizeof(FatFile83)).msdos;
                 noktaNokta.firstCluster = anaID & 0x0000FFFF;
-                noktaNokta.eaIndex = anaID << 16;
+                noktaNokta.eaIndex = anaID >> 16;
                 sisko32.diskEntriYaz(sisko32.clusterBaytAdresi(hedefDizin.dizinClusterID) + sizeof(FatFile83), (FatFileEntry*)&noktaNokta);
             }
         }

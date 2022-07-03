@@ -71,7 +71,7 @@ struct FatFile83 {
     uint16_t firstCluster;         // Last two bytes of the first cluster
     uint32_t fileSize;             // Filesize in bytes
 
-    uint32_t clusterID() const { return (eaIndex << 16) | firstCluster; }
+    uint32_t clusterID() const { return (eaIndex >> 16) | firstCluster; }
 
     static bool clusterVar(uint32_t clusterID) {
         if (clusterID >= 0x0FFFFFF8) {
@@ -88,7 +88,7 @@ struct FatFile83 {
 
     static string tarihSaatYaziyaDonustur(uint16_t tarih, uint16_t zaman) {
         string sonuc;
-        string aylar[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+        string aylar[12] = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
         sonuc += aylar[(tarih >> 5) & 0b1111] + " " + to_string(tarih & 0b11111) + " ";
         sonuc += saatBasina0Koy(to_string((zaman >> 11) & 0b11111)) + ":" +
                  saatBasina0Koy(to_string((zaman >> 5) & 0b111111));

@@ -452,7 +452,7 @@ FatFile83 Dizin::fatFile83olustur(string dizinAdi, bool klasordur, uint32_t firs
     dosya.setAllDateTimesToNow();
 
     dosya.firstCluster = firstClusterID & 0x0000FFFF;
-    dosya.eaIndex = firstClusterID << 16;
+    dosya.eaIndex = firstClusterID >> 16;
     return dosya;
 }
 
@@ -536,4 +536,15 @@ bool Dizin::dizinEntrileriEkle(pair<vector<FatFileLFN>, FatFile83> &dizin) {
     ffn.msdos = dizin.second;
     entriler.push_back(ffn);
     return dizinEntrileriEkle(entriler);
+}
+
+bool Dizin::operator==(const Dizin &rhs) const {
+    return sisko32 == rhs.sisko32 &&
+           dizinKelimeleri == rhs.dizinKelimeleri &&
+           dizinClusterID == rhs.dizinClusterID &&
+           fatFile83Adresi == rhs.fatFile83Adresi;
+}
+
+bool Dizin::operator!=(const Dizin &rhs) const {
+    return !(rhs == *this);
 }

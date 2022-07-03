@@ -108,6 +108,10 @@ public:
     static vector<FatFileEntry> FatFileLFNlerOlustur(string &dizinAdi, const unsigned char *fatFile83filename);
 
     bool fatFileEntrySil(string altDizin);
+
+    bool operator==(const Dizin &rhs) const;
+
+    bool operator!=(const Dizin &rhs) const;
 };
 
 #endif //INC_334_OS_ODEV_3_SISKO32_H
