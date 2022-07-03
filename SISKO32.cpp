@@ -401,6 +401,7 @@ bool Dizin::dizinEntrileriEkle(vector<FatFileEntry> &entriler) {
     }
     // null entry entrilerden silinir.
     entriler.pop_back();
+    return true;
 }
 
 FatFile83 Dizin::fatFile83olustur(string dizinAdi, bool klasordur) {

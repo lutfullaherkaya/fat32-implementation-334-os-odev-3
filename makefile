@@ -3,7 +3,7 @@ SOURCE	= main.cpp SISKO32.cpp Kabuk.cpp Bilimum.cpp
 HEADER	= main.h fat32.h SISKO32.h Kabuk.h Bilimum.h
 OUT	= hw3
 CC	 = g++
-FLAGS	 = -g -c -Wall
+FLAGS	 = -g -c
 LFLAGS	 =
 
 all: $(OBJS)
